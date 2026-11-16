@@ -1,14 +1,13 @@
 # BuildBack — Vercel Serverless Function: Calculator API
-# This is a standalone version that doesn't require Django
+# Pure Python - no Django required
 
 import json
 import os
 from decimal import Decimal
 from math import radians, cos, sin, asin, sqrt
-import requests
 
-# Haversine fallback (same as services.py)
 def haversine(lon1, lat1, lon2, lat2):
+    """Calculate distance between two points in km"""
     lon1, lat1, lon2, lat2 = map(radians, [float(lon1), float(lat1), float(lon2), float(lat2)])
     dlon = lon2 - lon1
     dlat = lat2 - lat1
@@ -17,7 +16,7 @@ def haversine(lon1, lat1, lon2, lat2):
     return c * 6371
 
 def estimate_savings(params):
-    """Pure Python calculator - no Django dependencies"""
+    """Calculate transport cost and savings"""
     qty = Decimal(str(params.get('quantity', 0)))
     rate = Decimal(str(params.get('vehicle_rate', 0)))
     min_fare = Decimal(str(params.get('min_fare', 0)))
@@ -28,12 +27,9 @@ def estimate_savings(params):
     transport_charge = max(min_fare, dist_km * rate)
     material_cost = qty * selling_price
     total_cost = material_cost + transport_charge
-
     new_total_cost = qty * new_market_price
     savings = new_total_cost - total_cost
     savings_pct = (savings / new_total_cost * 100) if new_total_cost > 0 else 0
-
-    worth_it = savings > 0
 
     return {
         'distance_km': float(round(dist_km, 2)),
@@ -42,44 +38,36 @@ def estimate_savings(params):
         'total_purchase_cost': float(round(total_cost, 2)),
         'savings_amount': float(round(savings, 2)),
         'savings_percentage': float(round(savings_pct, 1)),
-        'verdict': "Worth buying" if worth_it else "Not worth it",
-        'is_worth_it': worth_it
+        'verdict': "Worth buying" if savings > 0 else "Not worth it",
+        'is_worth_it': bool(savings > 0)
     }
 
-# Vercel handler
 def handler(request, response):
-    if request.method != 'POST':
-        return response.status(405).json({'error': 'Method not allowed'})
+    """Vercel Serverless Function Handler"""
+    # Set CORS headers
+    response.set_header('Access-Control-Allow-Origin', '*')
+    response.set_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    response.set_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+    if request.method == 'OPTIONS':
+        return response.status(200).end()
 
     try:
-        data = request.get_json()
+        # Get JSON body
+        body = request.body
+        if isinstance(body, bytes):
+            body = body.decode('utf-8')
+        data = json.loads(body) if isinstance(body, str) else body
+
         if not data:
-            return response.status(400).json({'error': 'Invalid JSON'})
+            return response.status(400).json({'error': 'No data provided'})
 
-        # If distance_km not provided, try to get from Google Distance Matrix
-        if 'distance_km' not in data or not data['distance_km']:
-            if 'origin_lat' in data and 'origin_lng' in data and 'dest_lat' in data and 'dest_lng' in data:
-                api_key = os.environ.get('GOOGLE_MAPS_API_KEY', '')
-                if api_key:
-                    url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={data['origin_lat']},{data['origin_lng']}&destinations={data['dest_lat']},{data['dest_lng']}&key={api_key}"
-                    try:
-                        resp = requests.get(url, timeout=5).json()
-                        if resp['status'] == 'OK':
-                            elem = resp['rows'][0]['elements'][0]
-                            if elem['status'] == 'OK':
-                                data['distance_km'] = elem['distance']['value'] / 1000.0
-                    except Exception:
-                        pass
-
-                # Fallback to Haversine
-                if 'distance_km' not in data:
-                    data['distance_km'] = haversine(
-                        data['origin_lng'], data['origin_lat'],
-                        data['dest_lng'], data['dest_lat']
-                    )
+        # Calculate distance if not provided
+        if 'distance_km' not in data:
+            data['distance_km'] = 0
 
         result = estimate_savings(data)
         return response.status(200).json(result)
 
     except Exception as e:
-        return response.status(500).json({'error': str(e)})
+        return response.status(500).json({'error': str(e), 'type': 'server_error'})

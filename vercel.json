@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "framework": "django",
-  "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput",
-  "outputDirectory": "staticfiles",
+  "framework": "nikita",
+  "buildCommand": "pip install -r requirements-vercel.txt && python -c \"import django; django.setup(); from generate_static import build_pages; build_pages()\" && python manage.py collectstatic --noinput",
+  "outputDirectory": "static_build/static",
   "devCommand": "python manage.py runserver",
-  "installCommand": "pip install -r requirements.txt",
+  "installCommand": "pip install -r requirements-vercel.txt",
   "regions": ["iad1"],
   "functions": {
     "api/**/*.py": {
@@ -22,7 +22,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "managed": true
     }
   ],
   "headers": [
@@ -32,6 +32,27 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://res.cloudinary.com https://maps.googleapis.com; connect-src 'self' https://*.up.railway.app https://*.vercel.app https://maps.googleapis.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
         }
       ]
     }
