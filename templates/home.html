@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero reveal" aria-labelledby="hero-title">
+    <div class="hero__bg">
+        <img src="{% static 'img/hero-bg.jpg' %}" alt="" loading="eager">
+    </div>
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+        <p class="eyebrow hero__eyebrow">SURPLUS MATERIALS NEARBY</p>
+        <h1 id="hero-title" class="hero__title">Give Leftover Materials <span class="gold">A Second Life</span>. Save Locally.</h1>
+        <p class="hero__desc">Find quality construction materials within 20 km. Buy surplus for less. Sell your leftovers. Calculate true costs instantly.</p>
+        <div class="hero__actions">
+            <a href="{% url 'browse' %}" class="btn btn--primary btn--lg">Browse Materials</a>
+            <a href="{% url 'sell' %}" class="btn btn--secondary btn--lg">Sell Yours</a>
+        </div>
+    </div>
+    <div class="hero__stats">
+        <div class="stats-bar" role="region" aria-label="Platform statistics">
+            <div class="stat">
+                <div class="stat__value" data-target="{{ stats.listings }}">0</div>
+                <div class="stat__label">Active Listings</div>
+            </div>
+            <div class="stat">
+                <div class="stat__value" data-target="{{ stats.sellers }}">0</div>
+                <div class="stat__label">Verified Sellers</div>
+            </div>
+            <div class="stat">
+                <div class="stat__value" data-target="{{ stats.radius }}">0</div>
+                <div class="stat__label">km Radius</div>
+            </div>
+            <div class="stat">
+                <div class="stat__value" data-target="{{ stats.avg_savings }}">0</div>
+                <div class="stat__label">Avg. Savings %</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURED LISTINGS -->
+<section class="section section--cream" aria-labelledby="featured-title">
+    <div class="container">
+        <header class="section__header">
+            <p class="eyebrow">Featured Listings</p>
+            <h2 id="featured-title" class="section__title">Materials Available Near You</h2>
+            <p class="section__desc">Hand-picked surplus materials from verified sellers in your area.</p>
+        </header>
+        <div class="grid grid--4" id="featuredGrid">
+            {% for material in featured %}
+                {% include 'partials/listing_card.html' %}
+            {% empty %}
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+                    <h3 class="empty-state__title">No listings yet</h3>
+                    <p class="empty-state__desc">Be the first to list surplus materials in your area.</p>
+                    <a href="{% url 'sell' %}" class="btn btn--primary">Sell Materials</a>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-3">
+            <a href="{% url 'browse' %}" class="btn btn--secondary">View All Listings</a>
+        </div>
+    </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section" aria-labelledby="categories-title">
+    <div class="container">
+        <header class="section__header">
+            <p class="eyebrow">Categories</p>
+            <h2 id="categories-title" class="section__title">Browse by Material Type</h2>
+            <p class="section__desc">Find exactly what you need across six construction categories.</p>
+        </header>
+        <div class="grid grid--3 grid--4@lg" id="categoriesGrid">
+            <a href="{% url 'browse' %}?category=tiles" class="card category-card reveal">
+                <div class="category-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg></div>
+                <h3 class="category-card__name">Tiles</h3>
+            </a>
+            <a href="{% url 'browse' %}?category=cement" class="card category-card reveal">
+                <div class="category-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+                <h3 class="category-card__name">Cement</h3>
+            </a>
+            <a href="{% url 'browse' %}?category=bricks" class="card category-card reveal">
+                <div class="category-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 3v18M3 15h18"/></svg></div>
+                <h3 class="category-card__name">Bricks</h3>
+            </a>
+            <a href="{% url 'browse' %}?category=steel" class="card category-card reveal">
+                <div class="category-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 12h18M12 3v18M3 3l18 18M21 3l-18 18"/></svg></div>
+                <h3 class="category-card__name">Steel</h3>
+            </a>
+            <a href="{% url 'browse' %}?category=pipes" class="card category-card reveal">
+                <div class="category-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0M5 12v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-8M19 12v8a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-8"/></svg></div>
+                <h3 class="category-card__name">Pipes</h3>
+            </a>
+            <a href="{% url 'browse' %}?category=other" class="card category-card reveal">
+                <div class="category-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div>
+                <h3 class="category-card__name">Other</h3>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section section--cream" aria-labelledby="how-title">
+    <div class="container">
+        <header class="section__header">
+            <p class="eyebrow">How It Works</p>
+            <h2 id="how-title" class="section__title">Simple as 1-2-3-4-5</h2>
+            <p class="section__desc">From leftover to livelihood in five straightforward steps.</p>
+        </header>
+        <div class="steps" role="list">
+            <article class="step reveal" role="listitem">
+                <div class="step__number">1</div>
+                <div class="step__content">
+                    <h3 class="step__title">Post Your Surplus</h3>
+                    <p class="step__desc">List materials with photos, quantity, price, and location in minutes.</p>
+                </div>
+            </article>
+            <article class="step reveal" role="listitem">
+                <div class="step__number">2</div>
+                <div class="step__content">
+                    <h3 class="step__title">Discover Nearby</h3>
+                    <p class="step__desc">Buyers browse materials within 20 km, filtered by category and price.</p>
+                </div>
+            </article>
+            <article class="step reveal" role="listitem">
+                <div class="step__number">3</div>
+                <div class="step__content">
+                    <h3 class="step__title">Calculate True Cost</h3>
+                    <p class="step__desc">Built-in calculator shows transport + material cost vs. buying new.</p>
+                </div>
+            </article>
+            <article class="step reveal" role="listitem">
+                <div class="step__number">4</div>
+                <div class="step__content">
+                    <h3 class="step__title">Contact Seller</h3>
+                    <p class="step__desc">Call or WhatsApp directly from the listing. No middlemen.</p>
+                </div>
+            </article>
+            <article class="step reveal" role="listitem">
+                <div class="step__number">5</div>
+                <div class="step__content">
+                    <h3 class="step__title">Collect & Save</h3>
+                    <p class="step__desc">Arrange pickup, pay on collection. Materials get a second life.</p>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="section" aria-labelledby="cta-title">
+    <div class="container">
+        <div class="cta-band reveal">
+            <h2 id="cta-title" class="cta-band__title">Got Materials Left Over?</h2>
+            <p class="cta-band__desc">Turn your surplus into cash. List in minutes, sell to builders nearby.</p>
+            <a href="{% url 'sell' %}" class="btn btn--primary btn--lg">Start Selling</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

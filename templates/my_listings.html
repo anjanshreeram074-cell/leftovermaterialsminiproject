@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section" aria-labelledby="mylistings-title">
+    <div class="container">
+        <header class="section__header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+            <div>
+                <h1 id="mylistings-title" class="section__title">My Listings</h1>
+                <p class="section__desc">Manage your active and sold listings</p>
+            </div>
+            <a href="{% url 'sell' %}" class="btn btn--primary">Create New Listing</a>
+        </header>
+
+        {% if listings %}
+        <div style="overflow-x: auto;">
+            <table class="my-listings__table" role="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Image</th>
+                        <th scope="col">Material</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Qty / Unit</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Listed</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for material in listings %}
+                    <tr>
+                        <td>
+                            {% with main_image=material.images.first %}
+                            {% if main_image %}
+                            <img src="{{ main_image.image_url }}" alt="{{ material.name }}" class="my-listings__image">
+                            {% else %}
+                            <div class="my-listings__image" style="background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--muted);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            </div>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td style="font-weight: 500;">{{ material.name }}</td>
+                        <td><span class="badge" style="background: rgba(185,138,82,.15); color: var(--gold); border: 1px solid var(--line);">{{ material.category|title }}</span></td>
+                        <td>{{ material.quantity }} {{ material.unit }}</td>
+                        <td style="font-weight: 600; color: var(--gold);">₹{{ material.selling_price|floatformat:0 }}/{{ material.unit }}</td>
+                        <td><span class="badge badge--status {{ material.status }}">{{ material.get_status_display }}</span></td>
+                        <td style="color: var(--muted); font-size: 0.85rem;">{{ material.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="my-listings__actions">
+                                <a href="{% url 'edit_listing' material.pk %}" class="btn btn--icon btn--sm" aria-label="Edit" title="Edit">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </a>
+                                {% if material.status == 'available' %}
+                                <form action="{% url 'mark_sold' material.pk %}" method="post" style="display: inline;">{% csrf_token %}
+                                    <button type="submit" class="btn btn--icon btn--sm" aria-label="Mark as sold" title="Mark Sold" style="background: transparent; border-color: var(--success); color: var(--success);">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{% url 'delete_listing' material.pk %}" class="btn btn--icon btn--sm" aria-label="Delete" title="Delete" style="background: transparent; border-color: var(--danger); color: var(--danger);">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="grid-column: 1/-1;">
+            <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 13.25A1 1 0 0 1 19.75 15H4.25A1 1 0 0 1 3 13.75V6.25A1 1 0 0 1 4.25 5H19.75A1 1 0 0 1 21 6.25z"/><path d="M7 10v4M13 10v4M17 10H7"/></svg>
+            <h3 class="empty-state__title">No listings yet</h3>
+            <p class="empty-state__desc">Start selling your surplus materials today.</p>
+            <a href="{% url 'sell' %}" class="btn btn--primary">Create Your First Listing</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

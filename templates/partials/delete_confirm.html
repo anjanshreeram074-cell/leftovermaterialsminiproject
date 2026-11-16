@@ -1,0 +1,20 @@
+<div class="modal-overlay show" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modal">
+        <h2 class="modal__title" id="deleteModalTitle">Delete Listing</h2>
+        <p class="modal__desc">Are you sure you want to delete "{{ material.name }}"? This action cannot be undone.</p>
+        <form method="post" class="modal__actions">
+            {% csrf_token %}
+            <a href="{% url 'my_listings' %}" class="btn btn--secondary">Cancel</a>
+            <button type="submit" class="btn btn--danger">Delete</button>
+        </form>
+    </div>
+</div>
+<script>
+    document.getElementById('deleteModal').querySelector('.btn--secondary').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = "{% url 'my_listings' %}";
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') window.location.href = "{% url 'my_listings' %}";
+    });
+</script>

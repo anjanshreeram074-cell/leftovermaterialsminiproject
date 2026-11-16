@@ -1,0 +1,55 @@
+# BuildBack — Git ignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.coverage
+.tox/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+*.pot
+*.pyc
+
+# Environment (NEVER commit real secrets!)
+.env
+.env.prod
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# MySQL data (local)
+mysql/data/
+D:/mysql/
+
+# Deployment
+deploy.sh
+buildback.service
+nginx.conf
+
+# Docs (optional - keep if you want in repo)
+# README.md
+# CLAUDE.md

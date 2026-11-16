@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&libraries=places&loading=async" async defer></script>
+{% endblock %}
+
+{% block content %}
+<section class="section" aria-labelledby="sell-title">
+    <div class="container">
+        <header class="section__header text-center" style="max-width: 600px; margin: 0 auto 2.5rem;">
+            <h1 id="sell-title" class="section__title">{% if edit_mode %}Edit Listing{% else %}Sell Your Materials{% endif %}</h1>
+            <p class="section__desc">{% if edit_mode %}Update your listing details{% else %}List your surplus construction materials in minutes. Reach buyers within 20 km.{% endif %}</p>
+        </header>
+
+        <form method="post" id="sellForm" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <!-- SECTION 1: DETAILS -->
+            <section class="form-section" aria-labelledby="details-title">
+                <h2 id="details-title" class="form-section__title">
+                    <svg class="form-section__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Material Details
+                </h2>
+
+                <div class="form-row">
+                    <div class="form-group {% if form.name.errors %}has-error{% endif %}">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Material Name *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<span class="form-error">{{ form.name.errors.0 }}</span>{% endif %}
+                    </div>
+                    <div class="form-group {% if form.category.errors %}has-error{% endif %}">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">Category *</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}<span class="form-error">{{ form.category.errors.0 }}</span>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group {% if form.quantity.errors %}has-error{% endif %}">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity Available *</label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}<span class="form-error">{{ form.quantity.errors.0 }}</span>{% endif %}
+                    </div>
+                    <div class="form-group {% if form.unit.errors %}has-error{% endif %}">
+                        <label for="{{ form.unit.id_for_label }}" class="form-label">Unit *</label>
+                        {{ form.unit }}
+                        {% if form.unit.errors %}<span class="form-error">{{ form.unit.errors.0 }}</span>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group {% if form.original_price.errors %}has-error{% endif %}">
+                        <label for="{{ form.original_price.id_for_label }}" class="form-label">Original Price (per unit) *</label>
+                        {{ form.original_price }}
+                        {% if form.original_price.errors %}<span class="form-error">{{ form.original_price.errors.0 }}</span>{% endif %}
+                    </div>
+                    <div class="form-group {% if form.selling_price.errors %}has-error{% endif %}">
+                        <label for="{{ form.selling_price.id_for_label }}" class="form-label">Selling Price (per unit) *</label>
+                        {{ form.selling_price }}
+                        {% if form.selling_price.errors %}<span class="form-error">{{ form.selling_price.errors.0 }}</span>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group {% if form.condition.errors %}has-error{% endif %}">
+                    <label for="{{ form.condition.id_for_label }}" class="form-label">Condition *</label>
+                    {{ form.condition }}
+                    {% if form.condition.errors %}<span class="form-error">{{ form.condition.errors.0 }}</span>{% endif %}
+                </div>
+            </section>
+
+            <!-- SECTION 2: PHOTOS -->
+            <section class="form-section" aria-labelledby="photos-title">
+                <h2 id="photos-title" class="form-section__title">
+                    <svg class="form-section__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    Photos (1-5 images, max 5MB each)
+                </h2>
+
+                <div class="upload-area" id="uploadArea" role="button" tabindex="0" aria-label="Upload images">
+                    <svg class="upload-area__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <p class="upload-area__text">Drag & drop images here, or click to browse</p>
+                    <p class="upload-area__hint">JPG, PNG, WebP • Max 5MB each • First image becomes main</p>
+                    <input type="file" id="imageInput" name="images" accept="image/*" multiple hidden>
+                </div>
+
+                <div class="upload-preview" id="uploadPreview" role="list" aria-label="Selected images"></div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <input type="hidden" name="image_urls" id="imageUrls" value="">
+                </div>
+            </section>
+
+            <!-- SECTION 3: LOCATION -->
+            <section class="form-section" aria-labelledby="location-title">
+                <h2 id="location-title" class="form-section__title">
+                    <svg class="form-section__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+                    Location
+                </h2>
+
+                <div class="location-picker">
+                    <div>
+                        <div class="form-group">
+                            <label for="addressInput" class="form-label">Search Address</label>
+                            <input type="text" id="addressInput" class="form-input" placeholder="Enter address or landmark..." autocomplete="off">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_lat" class="form-label">Latitude</label>
+                                <input type="text" id="id_lat" name="lat" class="form-input" readonly placeholder="Auto-filled from map">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_lng" class="form-label">Longitude</label>
+                                <input type="text" id="id_lng" name="lng" class="form-input" readonly placeholder="Auto-filled from map">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="id_address" class="form-label">Formatted Address</label>
+                            <input type="text" id="id_address" name="address" class="form-input" readonly placeholder="Auto-filled from map">
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                            <button type="button" id="gpsBtn" class="btn btn--secondary" style="flex: 1;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+                                Use My Location
+                            </button>
+                            <button type="button" id="clearLocationBtn" class="btn btn--ghost" style="flex: 1;">Clear</button>
+                        </div>
+                    </div>
+                    <div class="location-picker__map" id="locationMap" role="application" aria-label="Drag pin to set location"></div>
+                </div>
+            </section>
+
+            <!-- SUBMIT -->
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <a href="{% url 'my_listings' %}" class="btn btn--secondary">Cancel</a>
+                <button type="submit" id="submitBtn" class="btn btn--primary">
+                    <span class="btn-text">{% if edit_mode %}Update Listing{% else %}Create Listing{% endif %}</span>
+                    <span class="btn-loading" style="display:none;">
+                        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"/></svg>
+                        Saving...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/sell.js' %}"></script>
+{% endblock %}

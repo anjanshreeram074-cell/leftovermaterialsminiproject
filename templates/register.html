@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="auth-page" aria-labelledby="register-title">
+    <div class="card auth-card reveal">
+        <header class="auth-card__header">
+            <h1 id="register-title" class="auth-card__title">Create Account</h1>
+            <p class="auth-card__subtitle">Join BuildBack to buy or sell materials</p>
+        </header>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="role-selector" role="radiogroup" aria-label="Select your role">
+                <button type="button" class="role-selector__btn active" data-role="buyer" aria-pressed="true">Buyer</button>
+                <button type="button" class="role-selector__btn" data-role="seller" aria-pressed="false">Seller</button>
+                <input type="hidden" name="role" id="id_role" value="buyer">
+            </div>
+
+            <div class="form-group {% if form.username.errors %}has-error{% endif %}">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}<span class="form-error">{{ form.username.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="form-group {% if form.email.errors %}has-error{% endif %}">
+                <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}<span class="form-error">{{ form.email.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="form-group {% if form.phone.errors %}has-error{% endif %}">
+                <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
+                {{ form.phone }}
+                {% if form.phone.errors %}<span class="form-error">{{ form.phone.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="form-group {% if form.password.errors %}has-error{% endif %}">
+                <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}<span class="form-error">{{ form.password.errors.0 }}</span>{% endif %}
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="form-error" style="margin-bottom: 1rem;">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+
+            <button type="submit" class="btn btn--primary w-full">Create Account</button>
+        </form>
+
+        <p class="auth-links">
+            Already have an account? <a href="{% url 'login' %}">Sign In</a>
+        </p>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.role-selector__btn');
+    const hiddenInput = document.getElementById('id_role');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            buttons.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            hiddenInput.value = btn.dataset.role;
+        });
+    });
+});
+</script>
+{% endblock %}

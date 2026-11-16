@@ -1,0 +1,59 @@
+# BuildBack — Local Development with MySQL
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.4
+    container_name: buildback-db
+    environment:
+      MYSQL_DATABASE: buildback
+      MYSQL_USER: buildback
+      MYSQL_PASSWORD: buildback123
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: buildback-web
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=mysql://buildback:buildback123@db:3306/buildback
+      - DEBUG=1
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  # Production profile
+  web-prod:
+    build: .
+    container_name: buildback-web-prod
+    command: gunicorn buildback.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 60
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=mysql://buildback:buildback123@db:3306/buildback
+      - DEBUG=0
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.prod
+    profiles:
+      - prod
+
+volumes:
+  mysql_data:
