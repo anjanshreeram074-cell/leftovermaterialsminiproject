@@ -1,0 +1,52 @@
+# BuildBack — Vercel ignore
+
+# Source code (not needed for static build)
+*.py
+!generate_static.py
+!requirements-vercel.txt
+!api/
+!api/*.py
+
+# Django
+manage.py
+buildback/
+marketplace/
+migrations/
+db.sqlite3
+
+# Local development
+.env
+.env.local
+.env.prod
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+
+# Deployment (not for Vercel)
+docker-compose.yml
+Dockerfile
+railway.toml
+render.yaml
+fly.toml
+nginx.conf
+buildback.service
+deploy.sh
+
+# CI/CD
+.github/
+
+# Static build output (generated at deploy time)
+static_build/
+
+# Docs
+README.md
+CLAUDE.md
