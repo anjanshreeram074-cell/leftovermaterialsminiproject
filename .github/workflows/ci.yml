@@ -1,0 +1,124 @@
+# BuildBack — GitHub Actions CI/CD
+# Runs tests, linting, and can deploy to Railway/Render/Fly.io
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: '3.12'
+  DJANGO_SETTINGS_MODULE: 'buildback.settings'
+
+jobs:
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: buildback
+          MYSQL_USER: buildback
+          MYSQL_PASSWORD: buildback123
+          MYSQL_ROOT_PASSWORD: rootpassword
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 -u buildback -pbuildback123 && break
+            sleep 2
+          done
+
+      - name: Run migrations
+        run: python manage.py migrate --noinput
+        env:
+          DATABASE_URL: mysql://buildback:buildback123@127.0.0.1:3306/buildback
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: "True"
+          GOOGLE_MAPS_API_KEY: ""
+          CLOUDINARY_CLOUD_NAME: ""
+          CLOUDINARY_API_KEY: ""
+          CLOUDINARY_API_SECRET: ""
+
+      - name: Run tests
+        run: python manage.py test marketplace.tests -v 2
+        env:
+          DATABASE_URL: mysql://buildback:buildback123@127.0.0.1:3306/buildback
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: "True"
+
+      - name: Check Django
+        run: python manage.py check --deploy
+        env:
+          DATABASE_URL: mysql://buildback:buildback123@127.0.0.1:3306/buildback
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: "False"
+          ALLOWED_HOSTS: "testserver"
+
+  # Deploy to Railway (requires RAILWAY_TOKEN secret)
+  deploy-railway:
+    name: Deploy to Railway
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Railway
+        uses: railwayapp/railway-deploy@v1
+        with:
+          token: ${{ secrets.RAILWAY_TOKEN }}
+          service: buildback
+          environment: production
+
+  # Deploy to Render (requires RENDER_API_KEY + RENDER_SERVICE_ID secrets)
+  deploy-render:
+    name: Deploy to Render
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}"
+
+  # Deploy to Fly.io (requires FLY_API_TOKEN secret)
+  deploy-fly:
+    name: Deploy to Fly.io
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly
+        run: fly deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

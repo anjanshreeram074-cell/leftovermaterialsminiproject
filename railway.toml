@@ -1,0 +1,25 @@
+# BuildBack — Railway Configuration
+[build]
+builder = "NIXPACKS"
+buildCommand = "pip install -r requirements.txt && python manage.py collectstatic --noinput"
+
+[deploy]
+startCommand = "gunicorn buildback.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --timeout 60 --access-logfile - --error-logfile -"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Optional: Pre-deploy migrations (run once)
+# preDeployCommand = "python manage.py migrate --noinput"
+
+[variables]
+# These will be set in Railway dashboard
+# DATABASE_URL = ${{MYSQL_URL}}
+# SECRET_KEY = "your-secret-key"
+# DEBUG = "False"
+# ALLOWED_HOSTS = "your-app.up.railway.app"
+# GOOGLE_MAPS_API_KEY = "your-key"
+# CLOUDINARY_CLOUD_NAME = "your-cloud"
+# CLOUDINARY_API_KEY = "your-key"
+# CLOUDINARY_API_SECRET = "your-secret"
